@@ -34,7 +34,7 @@ Aplikasi dijalankan dengan **2 terminal terpisah**:
 
 ## 📦 Requirements
 
-Install Python 3.13.5 dari link berikut https://www.python.org/downloads/
+Install Python 3.13.5 dari link berikut https://www.python.org/downloads/ <br>
 Pilih OS nya (antara Windows/macOS/Linux) dan cari python versi 3.13.5 untuk didownload.
 Setelah download, install python dengan mengklik installernya dan klik next. Jangan lupa untuk mencentang "Add python to PATH"
 <img width="1200" height="675" alt="image" src="https://github.com/user-attachments/assets/6de94283-fbd9-45d9-b3f5-d3b1d1dd5c9c" />
