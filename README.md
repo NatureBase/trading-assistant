@@ -108,21 +108,14 @@ http://localhost:5173
 
 ---
 
-## ▶️ Menjalankan Aplikasi
+## ▶️ Penggunaan Aplikasi
 
-Jalankan 2 terminal:
+Saat kamu mengakses link di atas, akan muncul tampilan aplikasi seperti berikut <br>
+<img width="1181" height="608" alt="Screenshot 2026-04-20 at 09 53 48" src="https://github.com/user-attachments/assets/c2d828d2-646b-4d8a-ad09-87c186e31400" />
+<br>
+Pada bagian pojok kanan atas, perlu diperhatikan apakah sisi backend telah jalan atau tidak. Contoh backend tidak jalan: <br>
+<img width="1181" height="148" alt="Screenshot 2026-04-20 at 09 54 08" src="https://github.com/user-attachments/assets/4a7edb2d-82b1-4163-9d9b-a37e5348c598" />
+<br>
+Contoh backend sudah jalan: <br>
+<img width="1181" height="148" alt="Screenshot 2026-04-20 at 09 55 23" src="https://github.com/user-attachments/assets/aab86171-108f-4559-a711-eaddb559350f" />
 
-**Terminal 1 (Backend):**
-```bash
-cd backend
-source .venv/bin/activate
-python main.py
-```
-
-**Terminal 2 (Frontend):**
-```bash
-cd frontend
-npm run dev
-```
-
----
