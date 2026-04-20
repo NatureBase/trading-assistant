@@ -118,4 +118,15 @@ Pada bagian pojok kanan atas, perlu diperhatikan apakah sisi backend telah jalan
 <br>
 Contoh backend sudah jalan: <br>
 <img width="1181" height="148" alt="Screenshot 2026-04-20 at 09 55 23" src="https://github.com/user-attachments/assets/aab86171-108f-4559-a711-eaddb559350f" />
+<br>
+<br>
+Terkait akses data dari binance, terdapat dua cara:
+- Binance Public Data, data diambil melalui data.binance.vision dan hanya data semenjak sesi aplikasi dijalankan. Misal, sesi aplikasi dijalankan pada jam 12 siang. Artinya, data dari semenjak open time hingga jam 12 siang tidak akan muncul di aplikasi. Data juga akan berhenti diambil saat sesi aplikasi dimatikan dan aplikasi (untuk saat ini) tidak akan menyimpan data yang telah di ambil dari sesi tersebut, sehingga saat sesi aplikasi dijalankan kembali di waktu yang lain di hari yang sama, data dari sesi sebelumnya tidak akan muncul. 
+- Binance REST API, data diambil melalui API dari binance.com. Namun, jika koneksi internet menggunakan provider Telkom, cara ini tidak akan berhasil karena domain binance.com diblokir dan dialihkan ke internetpositif.id. Dengan menggunakan cara ini, semua data pada hari sesi aplikasi dijalankan akan tetap diambil. Misal, sesi aplikasi dijalankan saat jam 12 siang, data dari open time hingga jam 12 akan tetap diambil dan muncul di aplikasi.
+<br>
+<img width="1181" height="148" alt="Screenshot 2026-04-20 at 09 56 15" src="https://github.com/user-attachments/assets/c6f94ff9-72a0-468a-8cf6-5c57c40a2224" />
 
+<br>
+Jalankan aplikasi saat sudah memilih satu dari dua cara di atas.
+<br>
+<br>
