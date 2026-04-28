@@ -76,7 +76,22 @@ def build_feature_frame(
     df_k = pd.DataFrame(kline_5m_buffer).copy()
     df_a = pd.DataFrame(agg_features_buffer).copy()
 
-    df = pd.concat([df_k.reset_index(drop=True), df_a.reset_index(drop=True)], axis=1)
+    df_k["open_time"] = df_k["open_time"].astype("int64")
+    df_k = df_k.sort_values("open_time").drop_duplicates("open_time", keep="last")
+
+    if "open_time" in df_a.columns:
+        df_a["open_time"] = df_a["open_time"].astype("int64")
+        df_a = df_a.sort_values("open_time").drop_duplicates("open_time", keep="last")
+
+        df = df_k.merge(
+            df_a,
+            on="open_time",
+            how="left",
+            suffixes=("", "_agg"),
+        )
+    else:
+        df = pd.concat([df_k.reset_index(drop=True), df_a.reset_index(drop=True)], axis=1)
+
     df = add_kline_features(df)
     df = add_agg_rolling_features(df)
 

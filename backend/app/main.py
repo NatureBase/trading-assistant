@@ -28,6 +28,66 @@ clients: set[WebSocket] = set()
 class StartSessionRequest(BaseModel):
     source: str = "public_data"
 
+async def start_session_background(source: str):
+    try:
+        session_state.is_warming_up = True
+        session_state.status = "warming_up"
+        session_state.reason = f"loading historical data from {source}"
+        session_state.historical_source = source
+
+        await broadcast(
+            {
+                "type": "session_state",
+                "is_active": session_state.is_active,
+                "is_warming_up": session_state.is_warming_up,
+                "historical_loaded": session_state.historical_loaded,
+                "status": session_state.status,
+                "reason": session_state.reason,
+                "historical_source": session_state.historical_source,
+                "last_signal": session_state.last_signal,
+            }
+        )
+
+        # warmup_session masih sync, jadi jalankan di thread agar tidak block event loop
+        await asyncio.to_thread(warmup_session, source)
+
+        await broadcast(
+            {
+                "type": "session_state",
+                "is_active": session_state.is_active,
+                "is_warming_up": session_state.is_warming_up,
+                "historical_loaded": session_state.historical_loaded,
+                "status": session_state.status,
+                "reason": session_state.reason,
+                "historical_source": session_state.historical_source,
+                "last_signal": session_state.last_signal,
+                "closed_5m_candles": session_state.closed_5m_candles[-100:],
+                "kline_5m_count": len(session_state.kline_5m_buffer),
+                "kline_1h_count": len(session_state.kline_1h_buffer),
+            }
+        )
+
+        if session_state.is_active:
+            session_state.ws_task = asyncio.create_task(run_live_loop(broadcast))
+
+    except Exception as e:
+        session_state.status = "error"
+        session_state.reason = str(e)
+        session_state.is_warming_up = False
+
+        await broadcast(
+            {
+                "type": "session_state",
+                "is_active": session_state.is_active,
+                "is_warming_up": session_state.is_warming_up,
+                "historical_loaded": session_state.historical_loaded,
+                "status": session_state.status,
+                "reason": session_state.reason,
+                "historical_source": session_state.historical_source,
+                "last_signal": session_state.last_signal,
+            }
+        )
+
 async def broadcast(payload):
     dead = []
     for ws in clients:
@@ -65,16 +125,18 @@ async def start_session(payload: StartSessionRequest):
 
     session_state.reset_runtime_buffers()
     session_state.is_active = True
+    session_state.is_warming_up = True
+    session_state.status = "warming_up"
+    session_state.reason = f"loading historical data from {payload.source}"
+    session_state.historical_source = payload.source
 
-    warmup_session(payload.source)
-    session_state.ws_task = asyncio.create_task(run_live_loop(broadcast))
+    asyncio.create_task(start_session_background(payload.source))
 
     return {
         "ok": True,
-        "message": "session started",
+        "message": "session starting",
         "source": payload.source,
     }
-
 
 @app.post("/api/predict")
 async def predict_now():
@@ -105,9 +167,16 @@ async def ws_live(ws: WebSocket):
             {
                 "type": "session_state",
                 "is_active": session_state.is_active,
+                "is_warming_up": session_state.is_warming_up,
+                "historical_loaded": session_state.historical_loaded,
                 "status": session_state.status,
                 "reason": session_state.reason,
+                "historical_source": session_state.historical_source,
                 "last_signal": session_state.last_signal,
+                "last_prediction": session_state.last_prediction,
+                "closed_5m_candles": session_state.closed_5m_candles[-100:],
+                "kline_5m_count": len(session_state.kline_5m_buffer),
+                "kline_1h_count": len(session_state.kline_1h_buffer),
             }
         )
 

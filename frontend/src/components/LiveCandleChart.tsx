@@ -55,6 +55,26 @@ function toChartCandle(c: ClosedCandle | FormingCandle): CandlestickData<Time> {
   };
 }
 
+function normalizeCandles(
+  closedCandles: ClosedCandle[],
+  formingCandle?: FormingCandle | null
+): Array<ClosedCandle | FormingCandle> {
+  const merged: Array<ClosedCandle | FormingCandle> = [...closedCandles];
+
+  if (formingCandle) {
+    merged.push(formingCandle);
+  }
+
+  merged.sort((a, b) => a.open_time - b.open_time);
+
+  const dedupedMap = new Map<number, ClosedCandle | FormingCandle>();
+  for (const candle of merged) {
+    dedupedMap.set(candle.open_time, candle);
+  }
+
+  return Array.from(dedupedMap.values()).sort((a, b) => a.open_time - b.open_time);
+}
+
 export default function LiveCandleChart({
   closedCandles,
   formingCandle,
@@ -155,45 +175,46 @@ export default function LiveCandleChart({
   useEffect(() => {
     if (!candleSeriesRef.current) return;
 
-    const sortedClosed = [...closedCandles].sort((a, b) => a.open_time - b.open_time);
-    const candleData = sortedClosed.map(toChartCandle);
-
-    if (formingCandle) {
-      candleData.push(toChartCandle(formingCandle));
-    }
+    const normalizedCandles = normalizeCandles(closedCandles, formingCandle);
+    const candleData = normalizedCandles.map(toChartCandle);
 
     candleSeriesRef.current.setData(candleData);
 
-    const markers = signalMarkers.map((s) => {
+    const markerMap = new Map<number, {
+      time: Time;
+      position: "belowBar" | "aboveBar";
+      color: string;
+      shape: "arrowUp" | "arrowDown";
+      text: string;
+    }>();
+
+    for (const s of signalMarkers) {
       const time = Math.floor(s.time / 1_000_000) as Time;
 
       if (s.action === "BUY") {
-        return {
+        markerMap.set(Number(time), {
           time,
-          position: "belowBar" as const,
+          position: "belowBar",
           color: "#22c55e",
-          shape: "arrowUp" as const,
+          shape: "arrowUp",
           text: `BUY ${Math.round(s.prob_buy * 100)}%`
-        };
+        });
+      } else {
+        markerMap.set(Number(time), {
+          time,
+          position: "aboveBar",
+          color: "#ef4444",
+          shape: "arrowDown",
+          text: `SELL ${Math.round(s.prob_sell * 100)}%`
+        });
       }
-
-      return {
-        time,
-        position: "aboveBar" as const,
-        color: "#ef4444",
-        shape: "arrowDown" as const,
-        text: `SELL ${Math.round(s.prob_sell * 100)}%`
-      };
-    });
-
-    candleSeriesRef.current.setMarkers(markers);
-
-    const allCandles = [...sortedClosed];
-    if (formingCandle) {
-      allCandles.push(formingCandle);
     }
 
-    const lineTimes = allCandles.map((c) => Math.floor(c.open_time / 1_000_000) as Time);
+    candleSeriesRef.current.setMarkers(Array.from(markerMap.values()));
+
+    const lineTimes = normalizedCandles.map(
+      (c) => Math.floor(c.open_time / 1_000_000) as Time
+    );
 
     const makeFlatLine = (price: number | null | undefined) => {
       if (price == null || lineTimes.length === 0) return [];

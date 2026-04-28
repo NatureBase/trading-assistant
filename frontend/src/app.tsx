@@ -18,6 +18,17 @@ type ClosedCandle = {
   taker_buy_quote: number;
 };
 
+type SessionStatusResponse = {
+  is_active: boolean;
+  is_warming_up: boolean;
+  historical_loaded: boolean;
+  status: string;
+  reason: string;
+  last_signal: SignalPayload | null;
+  signal_history: SignalPayload[];
+  closed_5m_candles: ClosedCandle[];
+};
+
 type SignalPayload = {
   time: number;
   close_price: number;
@@ -33,15 +44,6 @@ type SignalPayload = {
   take_profit: number;
 };
 
-type SessionStatusResponse = {
-  is_active: boolean;
-  is_warming_up: boolean;
-  status: string;
-  reason: string;
-  last_signal: SignalPayload | null;
-  signal_history: SignalPayload[];
-  closed_5m_candles: ClosedCandle[];
-};
 
 type FormingKline = {
   open_time: number;
@@ -325,12 +327,13 @@ export default function App() {
         console.log("[WS] session_state");
         setSession((prev) => ({
           is_active: data.is_active,
-          is_warming_up: prev?.is_warming_up ?? false,
+          is_warming_up: data.is_warming_up ?? false,
+          historical_loaded: data.historical_loaded ?? prev?.historical_loaded ?? false,
           status: data.status,
           reason: data.reason,
           last_signal: data.last_signal,
           signal_history: prev?.signal_history ?? [],
-          closed_5m_candles: prev?.closed_5m_candles ?? []
+          closed_5m_candles: data.closed_5m_candles ?? prev?.closed_5m_candles ?? []
         }));
         setLastSignal(data.last_signal);
         return;
